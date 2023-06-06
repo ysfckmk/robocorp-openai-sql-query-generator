@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 5.0.1 (Python 3.9.13 on darwin)" generated="20230606 21:04:57.363" rpa="true" schemaversion="3">
+<suite id="s1" name="Tasks" source="/Users/yusufburakcakmak/Desktop/Robots/Robot4/tasks.robot">
+<test id="s1-t1" name="Use The Gpt as a Sql Expert" line="12">
+<kw name="Log" library="BuiltIn">
+<arg>Your Database is ${DB_PATH}</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20230606 21:04:58.848" level="INFO">Your Database is robot_site.db</msg>
+<status status="PASS" starttime="20230606 21:04:58.847" endtime="20230606 21:04:58.850"/>
+</kw>
+<kw name="Db Export" library="MyLibrary">
+<var>${db_schema}</var>
+<msg timestamp="20230606 21:04:58.866" level="INFO">${db_schema} = Table: robot_orders
+- order_id: INTEGER
+- customer_name: TEXT
+- part_name: TEXT
+- quantity: INTEGER
+- price: REAL
+- order_date: DATE
+- address: TEXT
+
+</msg>
+<status status="PASS" starttime="20230606 21:04:58.851" endtime="20230606 21:04:58.866"/>
+</kw>
+<kw name="Get Sql Query From Gpt" library="keywords">
+<var>${sql_json}</var>
+<arg>${db_schema}</arg>
+<kw name="Get File" library="OperatingSystem">
+<var>${gpt_temp}</var>
+<arg>resources/gptTemplate.txt</arg>
+<doc>Returns the contents of a specified file.</doc>
+<msg timestamp="20230606 21:04:58.868" level="INFO" html="true">Getting file '&lt;a href="file:///Users/yusufburakcakmak/Desktop/Robots/Robot4/resources/gptTemplate.txt"&gt;/Users/yusufburakcakmak/Desktop/Robots/Robot4/resources/gptTemplate.txt&lt;/a&gt;'.</msg>
+<msg timestamp="20230606 21:04:58.870" level="INFO">${gpt_temp} = You are a MySQL expert, and your responses from now on will be to generate reports based on the MySQL schema provided above.
+
+You will provide the necessary MySQL code and fields as the field and its ...</msg>
+<status status="PASS" starttime="20230606 21:04:58.867" endtime="20230606 21:04:58.871"/>
+</kw>
+<kw name="Get Secret" library="RPA.Robocorp.Vault">
+<var>${secrets}</var>
+<arg>openAi</arg>
+<doc>Read a secret from the configured source, e.g. Robocorp Vault,
+and return it as a ``Secret`` object.</doc>
+<msg timestamp="20230606 21:04:58.872" level="INFO">Protecting keyword: RPA.Robocorp.Vault.Get Secret</msg>
+<msg timestamp="20230606 21:04:59.639" level="INFO">Log level changed from NONE to INFO.</msg>
+<status status="PASS" starttime="20230606 21:04:58.872" endtime="20230606 21:04:59.638"/>
+</kw>
+<kw name="Authorize To Openai" library="RPA.OpenAI">
+<arg>${secrets}[key]</arg>
+<doc>Keyword for authorize to OpenAI with your API key obtained from your account.</doc>
+<status status="PASS" starttime="20230606 21:04:59.639" endtime="20230606 21:04:59.639"/>
+</kw>
+<kw name="Completion Create" library="RPA.OpenAI">
+<var>${response}</var>
+<arg>${gpt_temp} ${promt} ${SQL_PROMPT}</arg>
+<arg>temperature=0</arg>
+<doc>Keyword for creating text completions in OpenAI.
+Keyword returns a text string.</doc>
+<msg timestamp="20230606 21:05:16.059" level="INFO">{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "text": "\n\n{\n   \"query\": \"SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;\",\n   \"fields\": {\n      \"order_id\": \"Sipari\u015f Kimli\u011fi\",\n      \"customer_name\": \"M\u00fc\u015fteri Ad\u0131\",\n      \"part_name\": \"Par\u00e7a Ad\u0131\",\n      \"quantity\": \"Miktar\",\n      \"price\": \"Fiyat\",\n      \"order_date\": \"Sipari\u015f Tarihi\",\n      \"address\": \"Adres\"\n   }\n}"
+    }
+  ],
+  "created": 1686074700,
+  "id": "cmpl-7OVLANsKJG7XPWlalFSPQ9nYn0rN2",
+  "model": "text-davinci-003",
+  "object": "text_completion",
+  "usage": {
+    "completion_tokens": 151,
+    "prompt_tokens": 219,
+    "total_tokens": 370
+  }
+}</msg>
+<msg timestamp="20230606 21:05:16.061" level="INFO">${response} = {
+   "query": "SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;",
+   "fields": {
+      "order_id": "Sipariş Kimliği",...</msg>
+<status status="PASS" starttime="20230606 21:04:59.640" endtime="20230606 21:05:16.061"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>${response}</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20230606 21:05:16.064" level="INFO">{
+   "query": "SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;",
+   "fields": {
+      "order_id": "Sipariş Kimliği",
+      "customer_name": "Müşteri Adı",
+      "part_name": "Parça Adı",
+      "quantity": "Miktar",
+      "price": "Fiyat",
+      "order_date": "Sipariş Tarihi",
+      "address": "Adres"
+   }
+}</msg>
+<status status="PASS" starttime="20230606 21:05:16.063" endtime="20230606 21:05:16.065"/>
+</kw>
+<kw name="Evaluate" library="BuiltIn">
+<var>${json_object}</var>
+<arg>json.loads('''${response}''')</arg>
+<arg>json</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<msg timestamp="20230606 21:05:16.067" level="INFO">${json_object} = {'query': 'SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;', 'fields': {'order_id': 'Sipariş Kimliği', 'customer_nam...</msg>
+<status status="PASS" starttime="20230606 21:05:16.066" endtime="20230606 21:05:16.068"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>${json_object}</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20230606 21:05:16.069" level="INFO">{'query': 'SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;', 'fields': {'order_id': 'Sipariş Kimliği', 'customer_name': 'Müşteri Adı', 'part_name': 'Parça Adı', 'quantity': 'Miktar', 'price': 'Fiyat', 'order_date': 'Sipariş Tarihi', 'address': 'Adres'}}</msg>
+<status status="PASS" starttime="20230606 21:05:16.068" endtime="20230606 21:05:16.069"/>
+</kw>
+<return>
+<value>${json_object}</value>
+<status status="PASS" starttime="20230606 21:05:16.069" endtime="20230606 21:05:16.070"/>
+</return>
+<msg timestamp="20230606 21:05:16.070" level="INFO">${sql_json} = {'query': 'SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;', 'fields': {'order_id': 'Sipariş Kimliği', 'customer_nam...</msg>
+<status status="PASS" starttime="20230606 21:04:58.866" endtime="20230606 21:05:16.071"/>
+</kw>
+<kw name="Get value from JSON" library="RPA.JSON">
+<var>${sql_query}</var>
+<arg>${sql_json}</arg>
+<arg>$.query</arg>
+<doc>Get a single value from a JSON serializable object that matches the given expression.</doc>
+<msg timestamp="20230606 21:05:16.074" level="INFO">Get value from JSON with expression: '$.query'</msg>
+<msg timestamp="20230606 21:05:16.106" level="INFO">${sql_query} = SELECT order_id, customer_name, part_name, quantity, price, order_date, address FROM robot_orders ORDER BY order_date DESC LIMIT 3;</msg>
+<status status="PASS" starttime="20230606 21:05:16.072" endtime="20230606 21:05:16.106"/>
+</kw>
+<kw name="Get Data From Sqlite" library="keywords">
+<var>${sql_result}</var>
+<arg>${sql_query}</arg>
+<kw name="Run Sqlite Query" library="runSqlQuery">
+<var>${sql_result}</var>
+<arg>${DB_PATH}</arg>
+<arg>${sql_query}</arg>
+<msg timestamp="20230606 21:05:16.113" level="INFO">${sql_result} = [(584, 'Ty', 'Robot Body', 8, 252.5, '2023-12-28', '999 Maple Rd'), (748, 'Aaron', 'Robot Head', 3, 145.5, '2023-12-28', '999 Maple Rd'), (859, 'Edward', 'Robot Leg', 6, 313.46, '2023-12-28', '456 Elm...</msg>
+<status status="PASS" starttime="20230606 21:05:16.107" endtime="20230606 21:05:16.114"/>
+</kw>
+<kw name="Log" library="BuiltIn">
+<arg>${sql_result}</arg>
+<doc>Logs the given message with the given level.</doc>
+<msg timestamp="20230606 21:05:16.115" level="INFO">[(584, 'Ty', 'Robot Body', 8, 252.5, '2023-12-28', '999 Maple Rd'), (748, 'Aaron', 'Robot Head', 3, 145.5, '2023-12-28', '999 Maple Rd'), (859, 'Edward', 'Robot Leg', 6, 313.46, '2023-12-28', '456 Elm St')]</msg>
+<status status="PASS" starttime="20230606 21:05:16.115" endtime="20230606 21:05:16.116"/>
+</kw>
+<return>
+<value>${sql_result}</value>
+<status status="PASS" starttime="20230606 21:05:16.116" endtime="20230606 21:05:16.117"/>
+</return>
+<msg timestamp="20230606 21:05:16.117" level="INFO">${sql_result} = [(584, 'Ty', 'Robot Body', 8, 252.5, '2023-12-28', '999 Maple Rd'), (748, 'Aaron', 'Robot Head', 3, 145.5, '2023-12-28', '999 Maple Rd'), (859, 'Edward', 'Robot Leg', 6, 313.46, '2023-12-28', '456 Elm...</msg>
+<status status="PASS" starttime="20230606 21:05:16.106" endtime="20230606 21:05:16.117"/>
+</kw>
+<status status="PASS" starttime="20230606 21:04:58.845" endtime="20230606 21:05:16.118"/>
+</test>
+<doc>Template robot main suite.</doc>
+<status status="PASS" starttime="20230606 21:04:57.370" endtime="20230606 21:05:16.119"/>
+</suite>
+<statistics>
+<total>
+<stat pass="1" fail="0" skip="0">All Tasks</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat pass="1" fail="0" skip="0" id="s1" name="Tasks">Tasks</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
